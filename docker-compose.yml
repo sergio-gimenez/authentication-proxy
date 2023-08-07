@@ -1,0 +1,59 @@
+services:
+  keycloak:
+    container_name: keycloak
+    image: quay.io/keycloak/keycloak:20.0.0 # Official repo
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_PASSWORD: password
+      KC_DB_USERNAME: keycloak
+      KC_DB_SCHEMA: public
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_PROXY: edge # Enables communication through HTTP between the proxy and Keycloak. IOW, TLS terminates in the reverse proxy.
+      KC_HOSTNAME_ADMIN_URL: https://localhost:8443
+      KC_HOSTNAME_URL: https://localhost:8443
+    depends_on:
+      - postgres
+      # postgres:
+      # condition: service_healthy
+    networks:
+      - keycloak_nginx
+
+  postgres:
+    container_name: postgres
+    image: postgres:14.2
+    command: postgres -c 'max_connections=200'
+    volumes:
+      - pgdata_keycloak_nginx:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: keycloak
+    # healthcheck:
+    #   test: "exit 0" # This is by definition that instance is healthy
+    ports:
+      - 5436:5432
+    networks:
+      - keycloak_nginx
+
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    ports:
+      - 8080:80
+      - 8443:443
+    depends_on:
+      - keycloak
+      # keycloak:
+      #   condition: service_healthy
+    networks:
+      - keycloak_nginx
+
+volumes:
+  pgdata_keycloak_nginx:
+networks:
+  keycloak_nginx:
+    driver: bridge
