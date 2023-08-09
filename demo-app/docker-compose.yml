@@ -1,0 +1,12 @@
+services:
+  restricted_service:
+    container_name: hello_world
+    image: tutum/hello-world:latest
+    ports:
+      - 8888:80
+    networks:
+      - auth_proxy_net
+
+networks:
+  auth_proxy_net:
+    external: true

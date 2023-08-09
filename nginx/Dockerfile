@@ -1,4 +1,5 @@
-FROM nginx:1.25.1-alpine
-EXPOSE 80 443
+FROM nginx:latest
 COPY certs/* /etc/nginx/ssl/localhost/
 COPY config/nginx.conf /etc/nginx/nginx.conf
+EXPOSE 80 443
+
